@@ -8,6 +8,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecFram
 from stable_baselines3.common.env_util import make_atari_env
 from stable_baselines3.common.atari_wrappers import AtariWrapper
 from stable_baselines3.common.evaluation import evaluate_policy
+from dk_reward_wrapper import DKRewardWrapper
 
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
@@ -52,9 +53,14 @@ class DonkeyKongAgent:
         print("Falling back to CPU")
         return torch.device("cpu")
 
+    def _make_wrapped_env(self, **kwargs):
+        env = gym.make(self.env_id, render_mode="rgb_array")
+        return DKRewardWrapper(env)
+
     def _make_vector_envs(self):
         env = make_atari_env(
-            self.env_id,
+            #self.env_id,
+            self._make_wrapped_env,
             n_envs=self.num_envs,
             seed=0,
             env_kwargs={"render_mode": self.render_mode},
@@ -62,17 +68,18 @@ class DonkeyKongAgent:
         env = VecFrameStack(env, n_stack=4)
         return env
 
-    def train(self, timesteps=100_000):
+    def train(self, timesteps=1_000_000):
         # self.model = DQN(
         #     "CnnPolicy",
         #     self.env,
-        #     verbose=0,
-        #     buffer_size=100_000,
-        #     learning_starts=50_000,
+        #     verbose=1,
+        #     buffer_size=1_000_000,
+        #     learning_starts=100,
         #     exploration_fraction=0.1,
         #     exploration_final_eps=0.05,
         #     tensorboard_log="./dk_agent_logs/",
         #     device=self.device,
+        #     learning_rate=0.1,
         # )
         self.model = PPO(
             "CnnPolicy",
@@ -80,7 +87,7 @@ class DonkeyKongAgent:
             verbose=1,
             device=self.device,
             tensorboard_log="./dk_agent_logs/",
-            n_steps=512,
+            n_steps=128,
             n_epochs=4,
             batch_size=256,
             learning_rate=linear_schedule(2.5e-4),
