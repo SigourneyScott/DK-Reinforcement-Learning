@@ -48,7 +48,7 @@ class DonkeyKongRewardWrapper(gym.Wrapper):
 
     def reset(self, **kwargs):
         """
-        Reset the environment and store Mario's initial vertical position.
+        Reset the environment and store Mario's initial vertical position
 
         :param kwargs: Additional arguments for env.reset().
         :return: Observation and information.
